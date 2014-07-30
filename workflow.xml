@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<openerp>
+	<data>
+        <record id="trans_confirmed_assigned_back" model="workflow.transition">
+            <field name="act_from" ref="stock.act_assigned"/>
+            <field name="act_to" ref="stock.act_confirmed"/>
+            <field name="signal">button_confirm_assigned_back</field>
+        </record>
+	</data>
+</openerp>

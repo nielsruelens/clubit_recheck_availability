@@ -1,0 +1,22 @@
+{
+    'name': 'clubit_recheck_availability',
+    'version': '1.0',
+    'category': 'Warehouse',
+    'description': "General Purpose Toolbox",
+    'author': 'Niels Ruelens',
+    'website': 'http://clubit.be',
+    'summary': 'Warehouse availability check extensions',
+    'sequence': 9,
+    'depends': ['stock'],
+    'data': [
+        'workflow.xml',
+        'views.xml',
+    ],
+    'demo': [],
+    'test': [],
+    'css': [],
+    'images': [],
+    'installable': True,
+    'application': False,
+    'auto_install': False,
+}
