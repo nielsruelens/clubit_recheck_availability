@@ -1,5 +1,6 @@
 from openerp.osv import osv
 from openerp import netsvc
+import datetime
 from openerp.tools.translate import _
 
 
@@ -32,7 +33,7 @@ class stock_picking_out(osv.Model):
 
 
     def action_prioritize(self, cr, uid, ids, *args):
-        """ Prioritize pickings
+        """ Prioritize a picking
         @return: True
         """
         if len(ids) > 1:
@@ -48,8 +49,72 @@ class stock_picking_out(osv.Model):
         return True
 
     def action_maximize(self, cr, uid, ids, *args):
-        """ Maximize pickings
+        """ Maximize a picking
         @return: True
         """
+        if len(ids) > 1:
+            raise osv.except_osv(_('Not allowed!'), _('You may only maximize 1 delivery at a time!'))
+
+        pick = self.browse(cr, uid, ids)[0]
+
+        # If a product appears twice in a delivery, maximizing isn't allowed
+        # ------------------------------------------------------------------
+        if len(pick.move_lines) != len(set([m.product_id.id for m in pick.move_lines])):
+            raise osv.except_osv(_('Not allowed!'), _('You may only maximize if there are no product duplicates!'))
+
+
+        # Check if required
+        # -----------------
+        if not [m for m in pick.move_lines if m.state != 'assigned']:
+            return True
+
+        # See if we can get to fully availably by prioritizing
+        # ----------------------------------------------------
+        self.action_back_to_confirmed(cr, uid, ids)
+        self.action_prioritize(cr, uid, ids)
+        if not [m for m in pick.move_lines if m.state != 'assigned']:
+            return True
+
+
+        # If there's still lines that aren't fully available,
+        # split all non-available lines using serial numbers to allow for a maximum delivery
+        # ----------------------------------------------------------------------------------
+        lot_db = self.pool.get('stock.production.lot')
+        split_db = self.pool.get('stock.move.split')
+
+        moves = [m for m in pick.move_lines if m.state == 'confirmed']
+        for move in moves:
+
+            lot_id = lot_db.create(cr, uid, {'product_id': move.product_id.id, 'name': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')})
+            vals = {
+                'use_exist'   : True,
+                'product_id'  : move.product_id.id,
+                'product_uom' : move.product_id.uom_id.id,
+                'qty'         : move.product_qty,
+                'location_id' : move.location_id.id,
+                'line_exist_ids': [[0, False, {'prodlot_id': lot_id, 'quantity': move.product_qty - move.product_id.qty_available}]],
+            }
+            split_id = split_db.create(cr, uid, vals, context={'active_model':'stock.move'})
+            split_db.split(cr, uid, [split_id], [move.id], context={'active_model':'stock.move'})
+
+        self.action_assign(cr, uid, ids)
         return True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

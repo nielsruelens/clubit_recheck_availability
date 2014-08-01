@@ -9,7 +9,7 @@
                 <xpath expr="/form/header//button[@name='action_process']" position="after">
 	                <button name="action_back_to_confirmed" states="assigned" string="Unreserve Products" type="object" class="oe_highlight" groups="base.group_user"/>
 	                <button name="action_prioritize" states="confirmed" string="Prioritize Order" type="object" class="oe_highlight" groups="base.group_user"/>
-	                <button name="action_maximize" states="assigned" string="Maximize Availability" type="object" class="oe_highlight" groups="base.group_user"/>
+	                <button name="action_maximize" states="confirmed,assigned" string="Maximize Availability" type="object" class="oe_highlight" groups="base.group_user"/>
                 </xpath>
             </field>
         </record>
